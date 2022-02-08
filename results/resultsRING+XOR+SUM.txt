@@ -1,0 +1,9 @@
+Dataset	AUC	AUPRC	Saliency_bestK	Saliency_best2K	InputXGradient_bestK	InputXGradient_best2K	IG_noMul_bestK	IG_noMul_best2K	SmoothGrad_bestK	SmoothGrad_best2K	GuidedBackprop_bestK	GuidedBackprop_best2K	DeepLift_bestK	DeepLift_best2K	Deconvolution_bestK	Deconvolution_best2K	FeatureAblation_bestK	FeatureAblation_best2K	FeaturePermutation_bestK	FeaturePermutation_best2K	ShapleyValueSampling_bestK	ShapleyValueSampling_best2K	
+ring-xor-sum_1000samples-6feat.csv	0.804	0.840	0.065	0.403	0.032	0.392	0.151	0.595	0.002	0.113	0.148	0.591	0.151	0.595	0.148	0.591	0.111	0.513	0.263	0.724	0.024	0.379	
+ring-xor-sum_1000samples-8feat.csv	0.786	0.829	0.066	0.330	0.008	0.153	0.158	0.442	0.001	0.099	0.125	0.402	0.158	0.442	0.125	0.402	0.048	0.267	0.182	0.484	0.006	0.112	
+ring-xor-sum_1000samples-16feat.csv	0.738	0.783	0.054	0.218	0.011	0.050	0.096	0.250	0.003	0.096	0.087	0.230	0.097	0.250	0.087	0.230	0.031	0.113	0.101	0.244	0.007	0.036	
+ring-xor-sum_1000samples-32feat.csv	0.693	0.727	0.025	0.089	0.010	0.044	0.045	0.125	0.002	0.041	0.034	0.112	0.044	0.125	0.034	0.112	0.024	0.069	0.049	0.114	0.005	0.027	
+ring-xor-sum_1000samples-64feat.csv	0.640	0.659	0.018	0.045	0.016	0.038	0.018	0.060	0.000	0.011	0.023	0.061	0.018	0.059	0.023	0.061	0.022	0.050	0.033	0.065	0.009	0.025	
+ring-xor-sum_1000samples-128feat.csv	0.611	0.642	0.001	0.006	0.006	0.012	0.001	0.008	0.000	0.003	0.001	0.011	0.001	0.009	0.001	0.011	0.010	0.015	0.006	0.015	0.002	0.011	
+ring-xor-sum_1000samples-256feat.csv	0.581	0.601	0.000	0.000	0.001	0.004	0.000	0.000	0.000	0.000	0.000	0.001	0.000	0.000	0.000	0.001	0.001	0.004	0.000	0.004	0.000	0.003	
+ring-xor-sum_1000samples-512feat.csv	0.558	0.596	0.000	0.000	0.000	0.000	0.000	0.000	0.000	0.000	0.000	0.000	0.000	0.000	0.000	0.000	0.000	0.000	0.000	0.000	0.000	0.000	

@@ -1,0 +1,10 @@
+    Dataset	AUC	AUPRC	Saliency_bestK	Saliency_best2K	InputXGradient_bestK	InputXGradient_best2K	IG_noMul_bestK	IG_noMul_best2K	SmoothGrad_bestK	SmoothGrad_best2K	GuidedBackprop_bestK	GuidedBackprop_best2K	DeepLift_bestK	DeepLift_best2K	Deconvolution_bestK	Deconvolution_best2K	FeatureAblation_bestK	FeatureAblation_best2K	FeaturePermutation_bestK	FeaturePermutation_best2K	ShapleyValueSampling_bestK	ShapleyValueSampling_best2K	
+xor_1000samples-2feat.csv   1.000   1.000   1.000   1.000   1.000   1.000   1.000   1.000   1.000   1.000   1.000   1.000   1.000   1.000   1.000   1.000   1.000   1.000   1.000   1.000   1.000   1.000   
+xor_1000samples-4feat.csv	0.999	0.999	0.918	1.000	0.584	1.000	0.527	1.000	1.000	1.000	0.625	1.000	0.527	1.000	0.625	1.000	0.528	1.000	0.527	1.000	0.539	1.000	
+xor_1000samples-8feat.csv	0.998	0.998	0.796	0.892	0.543	0.610	0.473	0.510	1.000	1.000	0.508	0.563	0.472	0.511	0.508	0.563	0.516	0.526	0.449	0.512	0.512	0.533	
+xor_1000samples-16feat.csv	0.993	0.994	0.780	0.852	0.447	0.505	0.449	0.483	1.000	1.000	0.458	0.498	0.449	0.482	0.458	0.498	0.487	0.507	0.420	0.448	0.477	0.505	
+xor_1000samples-32feat.csv	0.978	0.980	0.806	0.845	0.424	0.467	0.452	0.476	1.000	1.000	0.447	0.471	0.451	0.475	0.447	0.471	0.468	0.485	0.403	0.437	0.453	0.481	
+xor_1000samples-64feat.csv	0.911	0.923	0.822	0.851	0.389	0.419	0.446	0.461	1.000	1.000	0.428	0.447	0.446	0.461	0.428	0.447	0.416	0.441	0.365	0.396	0.397	0.426	
+xor_1000samples-128feat.csv	0.635	0.645	0.510	0.583	0.213	0.265	0.244	0.280	0.779	0.895	0.264	0.302	0.245	0.280	0.264	0.302	0.215	0.261	0.160	0.203	0.173	0.222	
+xor_1000samples-256feat.csv	0.519	0.541	0.044	0.075	0.032	0.056	0.007	0.013	0.002	0.007	0.013	0.024	0.007	0.012	0.013	0.024	0.032	0.046	0.021	0.038	0.014	0.029	
+xor_1000samples-512feat.csv	0.510	0.548	0.000	0.000	0.000	0.001	0.000	0.000	0.000	0.000	0.000	0.000	0.000	0.000	0.000	0.000	0.000	0.000	0.000	0.004	0.000	0.000	
