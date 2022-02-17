@@ -21,13 +21,14 @@
 
 import os
 import sys
+import argparse
 import math
 
 import torch
-import torch as t
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics import roc_curve, auc, average_precision_score, precision_recall_curve
+from matplotlib import patches
+from sklearn.metrics import roc_curve, auc, average_precision_score
 import captum.attr
 
 import nn_wrapper
@@ -53,6 +54,9 @@ DATA_FOLDER = os.path.join(ROOT, 'data')
 OUTPUT_FOLDER = os.path.join(ROOT, 'results')
 if not os.path.isdir(OUTPUT_FOLDER):
     os.makedirs(OUTPUT_FOLDER)
+FIGURES_PATH = os.path.join(ROOT, 'figures')
+if not os.path.isdir(FIGURES_PATH):
+    os.makedirs(FIGURES_PATH)
 
 
 def read_indices(dirName):
@@ -94,7 +98,7 @@ def build_vectors(fold, xdb, ydb):
     return x, y
     
 
-def main_pred(input_filename, realFeatPos):
+def main_pred(input_filename, realFeatPos, dataset_name):
     print("#################################################", input_filename)
     folds = read_indices("indices/")
     n_folds = len(folds)
@@ -109,9 +113,14 @@ def main_pred(input_filename, realFeatPos):
         test = folds.pop(0)
         train = [x for f in folds for x in f]
         X, Y = build_vectors(train, xdb, ydb)
-        model = nn_wrapper.Model(len(X[0]))
+        if dataset_name == 'ring':
+            model = nn_wrapper.RingModel(len(X[0]))
+            learning_rate = 1e-1
+        else:
+            model = nn_wrapper.GeneralPurposeModel(len(X[0]))
+            learning_rate = 1e-3
         wrapper = nn_wrapper.NNwrapper(model)
-        wrapper.fit(X, Y, "cpu", epochs=200)
+        wrapper.fit(X, Y, "cpu", learning_rate=learning_rate)
         y_hat = wrapper.predict(X, "cpu")
         compute_scores(y_hat, Y, verbose=True)
         x, y = build_vectors(test, xdb, ydb)
@@ -142,7 +151,7 @@ def main_pred(input_filename, realFeatPos):
                 attr = ig.attribute(tmp_x, target=0)
             elif "SmoothGrad" == method_name:
                 ig = captum.attr.NoiseTunnel(captum.attr.Saliency(model))
-                attr = ig.attribute(tmp_x, target=0, nt_samples=10)
+                attr = ig.attribute(tmp_x, target=0, nt_samples=50, stdevs=0.1)
             elif "GuidedBackprop" == method_name:
                 ig = captum.attr.GuidedBackprop(model)
                 attr = ig.attribute(tmp_x, target=0)
@@ -165,38 +174,22 @@ def main_pred(input_filename, realFeatPos):
             sms[method_name][0] += attr
             sms[method_name][1] += x.tolist()
             
-            best_ks, best_2ks = compute_ks(attr, realFeatPos)
-            attrib_db[method_name]['k'].append(np.mean(best_ks))
-            attrib_db[method_name]['2k'].append(np.mean(best_2ks))
+            best_k, best_2k = compute_ks(attr, realFeatPos)
+            attrib_db[method_name]['k'].append(best_k)
+            attrib_db[method_name]['2k'].append(best_2k)
         i += 1
     return np.mean(auc_scores), np.mean(auprcs), attrib_db, sms
 
 
 def compute_ks(attr, real_feat_pos):
-    k = []
-    k2 = []
-    i = 0
-    while i < len(attr):
-        s = 0
-        tmp = []
-        while s < len(attr[i]):
-            tmp.append((s, attr[i][s]))
-            s += 1
-        tmp = sorted(tmp, key=lambda x: x[1], reverse=True)
-        k.append(find_correct_feats(real_feat_pos, tmp, 2))
-        k2.append(find_correct_feats(real_feat_pos, tmp, 4))
-        i += 1
-    return k, k2
-
-
-def find_correct_feats(correct_indices, attr, pos):
-    i = 0
-    k = 0
-    while i < min(pos, len(attr)):
-        if attr[i][0] in correct_indices:
-            k += 1
-        i += 1
-    return k / float(len(correct_indices))
+    real_feat_pos = set(real_feat_pos)
+    k = len(real_feat_pos)
+    attr = np.abs(np.asarray(attr))
+    importances = np.mean(attr, axis=0)
+    idx = np.argsort(importances)
+    best_k = np.sum([(i in real_feat_pos) for i in idx[-k:]]) / k
+    best_2k = np.sum([(i in real_feat_pos) for i in idx[-2*k:]]) / k
+    return best_k, best_2k
 
 
 def compute_scores(pred, real, threshold=None, verbose=False, curves=False, savefig=None):
@@ -215,30 +208,6 @@ def compute_scores(pred, real, threshold=None, verbose=False, curves=False, save
         raise Exception("ERROR: input vectors have different lengths!")
     if verbose:
         print("Computing scores for %d predictions" % len(pred))
-    
-    if curves or (savefig is not None):
-        precision, recall, thresholds = precision_recall_curve(real, pred)
-        fpr, tpr, _ = roc_curve(real, pred)     
-        fig, (ax1, ax2) = plt.subplots(figsize=[10.0, 5], ncols=2)
-        ax1.set_ylabel("Precision")
-        ax1.set_xlabel("Recall")
-        ax1.set_title("PR curve")
-        ax1.set_xlim(0, 1)
-        ax1.set_ylim(0, 1)
-        ax1.plot(recall, precision)
-        ax1.grid()
-        ax2.plot(fpr, tpr)
-        ax2.set_ylim(0, 1)
-        ax2.set_xlim(0, 1)
-        ax2.plot([0, 1], [0, 1], '--', c='grey')
-        ax2.set_xlabel('FPR')
-        ax2.set_ylabel('TPR')
-        ax2.set_title('ROC curve')
-        ax2.grid()
-        if savefig is not None:
-            plt.savefig(savefig, dpi=400)
-        plt.show()
-        plt.clf()
         
     fpr, tpr, thresholds = roc_curve(real, pred)
     auprc = average_precision_score(real, pred)
@@ -265,7 +234,7 @@ def compute_scores(pred, real, threshold=None, verbose=False, curves=False, save
             confusion_matrix['FP'] += 1
     if verbose:
         print("      | DEL         | NEUT             |")
-        print("DEL   | TP: %d   | FP: %d  |" % (confusion_matrix["TP"], confusion_matrix["FP"] ))
+        print("DEL   | TP: %d   | FP: %d  |" % (confusion_matrix["TP"], confusion_matrix["FP"]))
         print("NEUT  | FN: %d   | TN: %d  |" % (confusion_matrix["FN"], confusion_matrix["TN"]))
     
     sen = (confusion_matrix["TP"]/max(0.00001, float((confusion_matrix["TP"] + confusion_matrix["FN"]))))
@@ -297,7 +266,7 @@ def plot_score_interpretation(sms, boundaries='quadrants'):
             plt.subplot(3, 4, i + 1)
         x = np.asarray(sms[method_name][1])
         data = np.abs(np.asarray(sms[method_name][0]))
-        score = data[:, 0] / (np.sum(data, axis=1) + 1e-50)
+        score = np.min(data, axis=1) / (np.max(data, axis=1) + 1e-50)
         plt.scatter(x[:, 0], x[:, 1], s=15, c=score, alpha=0.5)
         plt.title(SA_METHODS[method_name], fontname='Century gothic')
         ax = plt.gca()
@@ -307,7 +276,14 @@ def plot_score_interpretation(sms, boundaries='quadrants'):
             plt.axvline(x=0, linestyle='--', linewidth=0.5, color='black')
             plt.axhline(y=0, linestyle='--', linewidth=0.5, color='black')
         else:
-            pass
+            r1 = 4 * 0.35
+            ax.add_patch(patches.Ellipse(
+                (0, 0), r1, r1, linewidth=0.5,
+                linestyle='--',fill=False, zorder=2, color='black'))
+            r2 = 4 * 0.1151
+            ax.add_patch(patches.Ellipse(
+                (0, 0), r2, r2, linewidth=0.5, linestyle='--',
+                fill=False, zorder=2, color='black'))
         plt.set_cmap('Spectral')
     plt.subplot(3, 4, 12)
     plt.colorbar()
@@ -318,21 +294,29 @@ def plot_score_interpretation(sms, boundaries='quadrants'):
     plt.tight_layout()
 
 
-def main(args):
+def main():
 
-    dataset_name = 'ring+xor+sum'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('dataset', type=str, choices=['ring', 'xor', 'ring+xor', 'ring+xor+sum'], help='Dataset name')
+    args = parser.parse_args()
+
+    dataset_name = args.dataset
     if dataset_name == 'ring':
         filenames = [f'ring_1000samples-{size}feat.csv' for size in [2, 4, 8, 16, 32, 64, 128, 256, 512]]
         output_filename = 'resultsRING.txt'
+        real_feat_pos = [0, 1]
     elif dataset_name == 'xor':
         output_filename = 'resultsXOR.txt'
         filenames = [f'xor_1000samples-{size}feat.csv' for size in [2, 4, 8, 16, 32, 64, 128, 256, 512]]
+        real_feat_pos = [0, 1]
     elif dataset_name == 'ring+xor':
         output_filename = 'resultsRING+XOR.txt'
         filenames = [f'ring+xor_1000samples-{size}feat.csv' for size in [2, 4, 8, 16, 32, 64, 128, 256, 512]]
+        real_feat_pos = [0, 1, 2, 3]
     elif dataset_name == 'ring+xor+sum':
         output_filename = 'resultsRING+XOR+SUM.txt'
         filenames = [f'ring-xor-sum_1000samples-{size}feat.csv' for size in [6, 8, 16, 32, 64, 128, 256, 512]]
+        real_feat_pos = [0, 1, 2, 3, 4, 5]
     else:
         raise NotImplementedError(f'Unknown dataset "{dataset_name}"')
     
@@ -343,19 +327,25 @@ def main(args):
             ofp.write(f'{method}_bestK\t{method}_best2K\t')
         ofp.write("\n")
         for filename in filenames:
-            auc, auprc, attrDB, sms = main_pred(filename, [0, 1])
+            auc, auprc, attrDB, sms = main_pred(filename, real_feat_pos, dataset_name)
             ofp.write("%s\t%.3f\t%.3f\t" % (filename, auc, auprc))
             for n in SA_METHOD_NAMES:
                 ofp.write("%.3f\t%.3f\t" % (np.mean(attrDB[n]["k"]), np.mean(attrDB[n]["2k"])))
             ofp.write("\n")
 
             if filename == 'xor_1000samples-2feat.csv':
+                plt.figure(figsize=(10, 5))
                 plot_score_interpretation(sms, boundaries='quadrants')
+                plt.savefig(os.path.join(FIGURES_PATH, 'interpretation-xor.eps'))
                 plt.show()
+                plt.clf()
             if filename == 'ring_1000samples-2feat.csv':
-                plot_score_interpretation(sms, boundaries='quadrants')
+                plt.figure(figsize=(10, 5))
+                plot_score_interpretation(sms, boundaries='circles')
+                plt.savefig(os.path.join(FIGURES_PATH, 'interpretation-ring.eps'))
                 plt.show()
+                plt.clf()
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv))
+    sys.exit(main())

@@ -26,30 +26,44 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 
 
-class Model(torch.nn.Module):
+def init_weights(m):
+    if isinstance(m, torch.nn.Linear):
+        print(f'Initializing weights... {m.__class__.__name__}')
+        torch.nn.init.xavier_uniform(m.weight)
+        m.bias.data.fill_(0.1)
 
-    def __init__(self, input_size, latent_size=32, name='NN'):
+
+class GeneralPurposeModel(torch.nn.Module):
+
+    def __init__(self, input_size, latent_size=32):
         torch.nn.Module.__init__(self)
-        self.name = name
-        self.input_size = input_size
-        self.latent_size = latent_size
         self.layers = torch.nn.Sequential(
-            torch.nn.Linear(self.input_size, self.latent_size),
-            torch.nn.LeakyReLU(),
-            torch.nn.Linear(self.latent_size, 1))
+            torch.nn.Linear(input_size, latent_size),
+            torch.nn.Dropout(p=0.8, inplace=True),
+            torch.nn.PReLU(num_parameters=latent_size),
+            torch.nn.Linear(latent_size, 1))
+        self.apply(init_weights)
             
     def forward(self, x):
         return self.layers(x)
 
-    @staticmethod
-    def init_weights(m):
-        if isinstance(m, torch.nn.Linear):
-            print(f'Initializing weights... {m.__class__.__name__}')
-            torch.nn.init.xavier_uniform(m.weight)
-            m.bias.data.fill_(0.1)
+
+class RingModel(torch.nn.Module):
+
+    def __init__(self, input_size, latent_size=32):
+        torch.nn.Module.__init__(self)
+        self.layers = torch.nn.Sequential(
+            torch.nn.Linear(input_size, latent_size),
+            torch.nn.Dropout(p=0.2, inplace=True),
+            torch.nn.Tanh(),
+            torch.nn.Linear(latent_size, 1))
+        self.apply(init_weights)
+            
+    def forward(self, x):
+        return self.layers(x)
 
 
-class MyDataset(Dataset):
+class TrainingSet(Dataset):
     
     def __init__(self, X, Y):    
     
@@ -64,7 +78,7 @@ class MyDataset(Dataset):
         return self.X[idx], self.Y[idx]
 
 
-class MypredDataset(Dataset):
+class TestSet(Dataset):
     
     def __init__(self, X):    
         self.X = torch.tensor(X, dtype=torch.float32)
@@ -79,19 +93,12 @@ class MypredDataset(Dataset):
 class NNwrapper:
 
     def __init__(self, model):
-        if type(model) == str:
-            self.model = torch.load(model)
-        else:
-            self.model = model
+        self.model = model
 
-    def fit(self, X, Y, device, epochs=50, batch_size=20,
-            save_model_every=300, weight_decay=1e-5, learning_rate=1e-3):
-        t1 = time.time()
-        dataset = MyDataset(X, Y)
-        t2 = time.time()
-        print("Dataset created in %.2fs" % (t2 - t1))
+    def fit(self, X, Y, device, epochs=100, batch_size=64, weight_decay=1e-5, learning_rate=1e-3):
+        dataset = TrainingSet(X, Y)
         self.model.train()
-        criterion = torch.nn.BCEWithLogitsLoss()
+        criterion = torch.nn.BCEWithLogitsLoss(reduce=True, reduction='mean')
         p = []
         for i in list(self.model.parameters()):
             p += list(i.data.cpu().numpy().flat)
@@ -101,8 +108,8 @@ class NNwrapper:
         optimizer = torch.optim.Adam(
             self.model.parameters(), lr=learning_rate, weight_decay=weight_decay)
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer, mode='min', factor=0.3, patience=7, verbose=True, threshold=0.0001,
-            threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08)
+            optimizer, mode='min', factor=0.9, patience=10, verbose=True, threshold=0.0001,
+            threshold_mode='rel', cooldown=5, min_lr=0, eps=1e-08)
 
         loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, sampler=None, num_workers=0)
         e = 1
@@ -124,14 +131,13 @@ class NNwrapper:
             if e % 10 == 0:
                 print(f'epoch {e}, ERRORTOT: {total_error} ({end - start})')
             scheduler.step(total_error)
-            if e % save_model_every == 0:
-                print('Store model ', e)
             e += 1
+        self.model.eval()
     
     def predict(self, X, device):
         self.model.eval()
         print('Predicting...')
-        dataset = MypredDataset(X)
+        dataset = TestSet(X)
         loader = DataLoader(dataset, batch_size=len(X), shuffle=False, sampler=None, num_workers=0)
         predictions = []
         for sample in loader:

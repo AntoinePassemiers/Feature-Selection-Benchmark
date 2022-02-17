@@ -1,0 +1,10 @@
+Dataset	mRMR_bestK	mRMR_best2K	LassoNet_bestK	LassoNet_best2K
+xor_1000samples-2feat.csv	1.0	1.0	1.0	1.0
+xor_1000samples-4feat.csv	0.4166666666666667	0.4166666666666667	1.0	1.0
+xor_1000samples-8feat.csv	0.08333333333333333	0.08333333333333333	1.0	1.0
+xor_1000samples-16feat.csv	0.0	0.0	1.0	1.0
+xor_1000samples-32feat.csv	0.0	0.0	0.8333333333333334	0.8333333333333334
+xor_1000samples-64feat.csv	0.0	0.0	0.16666666666666666	0.16666666666666666
+xor_1000samples-128feat.csv	0.0	0.0	0.0	0.0
+xor_1000samples-256feat.csv	0.0	0.0	0.0	0.0
+xor_1000samples-512feat.csv	0.0	0.0	0.0	0.0
