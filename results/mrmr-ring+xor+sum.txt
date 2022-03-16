@@ -1,0 +1,9 @@
+Dataset	mRMR_bestK	mRMR_best2K
+ring-xor-sum_1000samples-6feat.csv	1.0	1.0
+ring-xor-sum_1000samples-8feat.csv	0.9166666666666666	1.0
+ring-xor-sum_1000samples-16feat.csv	0.9166666666666666	1.0
+ring-xor-sum_1000samples-32feat.csv	0.8888888888888888	1.0
+ring-xor-sum_1000samples-64feat.csv	0.8333333333333334	0.9722222222222223
+ring-xor-sum_1000samples-128feat.csv	0.8055555555555555	0.9444444444444445
+ring-xor-sum_1000samples-256feat.csv	0.6944444444444445	0.9444444444444445
+ring-xor-sum_1000samples-512feat.csv	0.611111111111111	0.7777777777777778

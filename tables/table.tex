@@ -1,32 +1,32 @@
 \begin{table}[h!]
 \centering
-\caption{Average of best k and best 2k score percentages across all values of $p \in \{2, 4, 6, 8, 16, 32, 64, 128, 256, 512\}$, on the 4 datasets. Top and bottom parts of the table correspond to instance-level feature attribution and \textit{a priori}/model-based FS methods, respectively. Best performing methods are highlighted in bold.}
+\caption{Average of best k and best 2k score percentages across all values of $p \in \{2, 4, 6, 8, 16, 32, 64, 128, 256, 512\}$, on the 4 datasets. Top and bottom parts of the table correspond to instance-level feature attribution and embedded/filter FS methods, respectively. Best performing methods are highlighted in bold.}
 \begin{adjustwidth}{-1.0in}{-1.0in}
 \label{tab:benchmark}{\begin{tabular}{lrrrrrrrr}\toprule
 Dataset & \multicolumn{2}{c}{\ring} & \multicolumn{2}{c}{\xor} & \multicolumn{2}{c}{\ringxor} & \multicolumn{2}{c}{\ringxorsum} \\
 \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9}
-Method & Best k & Best 2k & Best k & Best 2k & Best k & Best 2k & Best k & Best 2k \\ \midrule
-Saliency maps & 35.2 & 41.7 & 42.6 & 47.2 & 32.4 & 39.8 & 56.2 & 66.0 \\
-Integrated gradient & 28.7 & 37.0 & 41.7 & 44.4 & 32.0 & 40.7 & 55.9 & 66.3 \\
-DeepLift & 28.7 & 37.0 & 42.6 & 47.2 & 32.4 & 39.8 & 56.2 & 66.0 \\
-Input $\times$ Gradient & 38.9 & 40.7 & 43.5 & 45.4 & 32.4 & 39.8 & 55.5 & 66.3 \\
-SmoothGrad & 36.1 & 41.7 & 42.6 & 46.3 & 32.4 & 39.8 & 56.2 & 66.3 \\
-Guided backpropagation & 35.2 & 41.7 & 42.6 & 47.2 & 32.4 & 39.8 & 56.2 & 66.0 \\
-Deconvolution & 35.2 & 41.7 & 42.6 & 47.2 & 32.4 & 39.8 & 56.2 & 66.0 \\
-Feature ablation & 34.3 & 38.9 & 44.4 & 47.2 & 32.9 & 39.8 & 55.2 & 66.3 \\
-Feature permutation & 36.1 & 40.7 & 43.5 & 46.3 & 31.5 & 40.3 & 54.5 & 65.6 \\
-Shapley value sampling & 32.4 & 41.7 & 40.7 & 43.5 & 31.5 & 38.4 & 55.9 & 66.7 \\
+Method & Best p & Best 2p & Best p & Best 2p & Best p & Best 2p & Best p & Best 2p \\ \midrule
+Saliency maps & 53.7 & 58.3 & 82.4 & 83.3 & 56.0 & 61.1 & 68.7 & 72.6 \\
+Integrated gradient & 49.1 & 56.5 & 82.4 & 83.3 & 54.2 & 59.7 & 68.8 & 72.9 \\
+DeepLift & 50.9 & 56.5 & 82.4 & 83.3 & 54.2 & 59.7 & 68.8 & 73.3 \\
+Input $\times$ Gradient & 54.6 & 59.3 & 82.4 & 84.3 & 57.9 & 60.6 & 68.7 & 73.3 \\
+SmoothGrad & 53.7 & 58.3 & 82.4 & 83.3 & 56.5 & 61.1 & 68.7 & 72.6 \\
+Guided backpropagation & 53.7 & 58.3 & 82.4 & 83.3 & 56.0 & 61.1 & 68.7 & 72.6 \\
+Deconvolution & 53.7 & 58.3 & 82.4 & 83.3 & 56.0 & 61.1 & 68.7 & 72.6 \\
+Feature ablation & 52.8 & 53.7 & 82.4 & 83.3 & 55.6 & 59.3 & 68.0 & 72.2 \\
+Feature permutation & 50.9 & 53.7 & 82.4 & 83.3 & 54.2 & 59.3 & 67.7 & 71.5 \\
+Shapley value sampling & 51.9 & 56.5 & 78.7 & 79.6 & 55.1 & 59.7 & 67.7 & 72.9 \\
 \midrule
-mRMR & 74.1 & 74.1 & 16.7 & 16.7 & 38.0 & 38.0 & 42.4 & 42.4 \\
-LassoNet & 24.1 & 35.2 & 55.6 & 55.6 & 32.3 & 41.1 & 44.4 & 53.5 \\
-Relief & 50.0 & 52.8 & 91.7 & 92.6 & 52.6 & 60.9 & 51.0 & 63.9 \\
-Concrete Autoencoder & 24.1 & 30.6 & 27.8 & 36.1 & 24.0 & 35.9 & 44.1 & 45.5 \\
-FSNet & 25.9 & 32.4 & 22.2 & 33.3 & 24.5 & 37.5 & 29.2 & 42.0 \\
-CancelOut (softmax) & 46.3 & 47.2 & 75.9 & 75.9 & 44.8 & 51.0 & 60.8 & 65.6 \\
-CancelOut (sigmoid) & 40.7 & 42.6 & 49.1 & 50.9 & 24.5 & 38.5 & 31.2 & 41.3 \\
-DeepPINK (DK) & 36.1 & 40.7 & 19.4 & 34.3 & 30.7 & 41.1 & 46.5 & 56.9 \\
-DeepPINK (2o) & 32.4 & 35.2 & 20.4 & 35.2 & 33.3 & 41.1 & 53.8 & 65.3 \\
-Random Forest & 100.0 & 100.0 & 71.3 & 72.2 & 96.4 & 98.4 & 90.3 & 95.5 \\
+mRMR & 100.0 & 100.0 & 31.5 & 42.6 & 79.7 & 89.1 & 83.3 & 95.5 \\
+LassoNet & 42.6 & 46.3 & 100.0 & 100.0 & 57.3 & 63.0 & 69.8 & 75.7 \\
+Relief & 46.3 & 50.0 & 90.7 & 91.7 & 51.0 & 56.2 & 49.7 & 62.2 \\
+Concrete Autoencoder & 34.3 & 41.7 & 48.1 & 63.9 & 31.2 & 43.2 & 39.2 & 51.7 \\
+FSNet & 31.5 & 38.9 & 46.3 & 50.9 & 37.5 & 46.9 & 42.7 & 56.6 \\
+CancelOut (softmax) & 35.2 & 38.9 & 46.3 & 47.2 & 34.4 & 41.7 & 52.8 & 62.2 \\
+CancelOut (sigmoid) & 51.9 & 53.7 & 88.0 & 88.9 & 53.1 & 59.9 & 68.4 & 76.0 \\
+DeepPINK (U) & 32.4 & 39.8 & 45.4 & 51.9 & 37.0 & 45.3 & 59.4 & 67.0 \\
+DeepPINK (2o) & 34.3 & 40.7 & 38.0 & 50.0 & 30.2 & 40.6 & 50.3 & 60.1 \\
+Random Forest & 100.0 & 100.0 & 68.5 & 72.2 & 94.8 & 99.0 & 91.3 & 96.2 \\
 \bottomrule
 \end{tabular}}{}
 \end{adjustwidth}

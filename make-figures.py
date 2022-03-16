@@ -22,6 +22,7 @@
 import os
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
 
@@ -49,8 +50,9 @@ METHODS = {
     'ShapleyValueSampling': ('Shapley value sampling', 'mediumpurple', 'D'),
     'CancelOut_Sigmoid': ('CancelOut (sigmoid)', 'orangered', 'o'),
     'CancelOut_Softmax': ('CancelOut (softmax)', 'orange', 'o'),
+    'DeepPINK_U': ('DeepPINK (U)', 'violet', 'x'),
     'DeepPINK_2o': ('DeepPINK (2o)', 'pink', 'x'),
-    'DeepPINK_DK': ('DeepPINK (DK)', 'violet', 'x'),
+    #'DeepPINK_DK': ('DeepPINK (DK)', 'violet', 'x'),
     'CAE': ('Concrete Autoencoder', 'mediumseagreen', 'D'),
     'FSNet': ('FSNet', 'navy', 's'),
     'RF': ('Random Forest', 'darkgreen', 'D'),
@@ -61,16 +63,16 @@ METHODS = {
 METHOD_NAMES = list(METHODS.keys())
 
 
-def load_pietro_results(filepath, results):
+def load_extra_results(filepath, results):
     with open(filepath, 'r') as f:
         lines = f.readlines()
-    header = lines[0].rstrip().split(',')
+    header = lines[0].rstrip().split('\t')
     lines = lines[1:]
     for line in lines:
-        elements = line.rstrip().split(',')
+        elements = line.rstrip().split('\t')
         if len(elements) > 1:
-            n_features = int(elements[1].replace('feat.csv', '').split('-')[-1])
-            for i in range(2, len(elements)):
+            n_features = int(elements[0].replace('feat.csv', '').split('-')[-1])
+            for i in range(1, len(elements)):
                 if header[i].endswith('_AUC'):
                     results[header[i].replace('_AUC', '')][n_features]['auroc'] = float(elements[i])
                 elif header[i].endswith('_AUPRC'):
@@ -103,27 +105,11 @@ def load_nn_results(filepath, results):
                     raise NotImplementedError(header[i])
 
 
-def load_extra_results(filepath, results):
-    with open(filepath, 'r') as f:
-        lines = f.readlines()
-    header = lines[0].rstrip().split('\t')
-    lines = lines[1:]
-    for line in lines:
-        elements = line.rstrip().split('\t')
-        if len(elements) > 1:
-            n_features = int(elements[0].replace('feat.csv', '').split('-')[-1])
-            for i in range(1, len(elements)):
-                if header[i].endswith('_bestK'):
-                    results[header[i].replace('_bestK', '')][n_features]['best-k'] = float(elements[i])
-                elif header[i].endswith('_best2K'):
-                    results[header[i].replace('_best2K', '')][n_features]['best-2k'] = float(elements[i])
-                else:
-                    raise NotImplementedError(header[i])
+def plot_performance(results, ns, k):
 
+    ns = np.asarray(ns)
 
-def plot_performance(results, ns):
-
-    alpha = 0.6
+    alpha = 0.5
     legend_size = 9
 
     plt.figure(figsize=(16, 8))
@@ -162,9 +148,10 @@ def plot_performance(results, ns):
         ys = np.asarray([results[method_name][n_features]['best-k'] for n_features in ns])
         if not np.all(np.isnan(ys)):
             plt.plot(ns, 100 * ys, alpha=alpha, label=label, color=color, marker=marker)
+    plt.fill_between(ns, 100 * k / ns, color='grey', alpha=0.25)
     plt.xscale('log')
     plt.xlabel('Number of features', fontname='Century gothic')
-    plt.ylabel('Best k (%)', fontname='Century gothic')
+    plt.ylabel('Best p (%)', fontname='Century gothic')
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
     ax.set_xticks(ns)
@@ -176,9 +163,10 @@ def plot_performance(results, ns):
         ys = np.asarray([results[method_name][n_features]['best-2k'] for n_features in ns])
         if not np.all(np.isnan(ys)):
             plt.plot(ns, 100 * ys, alpha=alpha, label=label, color=color, marker=marker)
+    plt.fill_between(ns, np.minimum(100, 2 * 100 * k / ns), color='grey', alpha=0.25)
     plt.xscale('log')
     plt.xlabel('Number of features', fontname='Century gothic')
-    plt.ylabel('Best 2k (%)', fontname='Century gothic')
+    plt.ylabel('Best 2p (%)', fontname='Century gothic')
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
     ax.set_xticks(ns)
@@ -197,7 +185,7 @@ def create_table(results):
     s += '\\label{tab:benchmark}{\\begin{tabular}{lrrrrrrrr}\\toprule\n'
     s += 'Dataset & \\multicolumn{2}{c}{\\ring} & \\multicolumn{2}{c}{\\xor} & \\multicolumn{2}{c}{\\ringxor} & \\multicolumn{2}{c}{\\ringxorsum} \\\\\n'
     s += '\\cmidrule(lr){2-3} \\cmidrule(lr){4-5} \\cmidrule(lr){6-7} \\cmidrule(lr){8-9}\n'
-    s += 'Method & Best k & Best 2k & Best k & Best 2k & Best k & Best 2k & Best k & Best 2k \\\\ \\midrule\n'
+    s += 'Method & Best p & Best 2p & Best p & Best 2p & Best p & Best 2p & Best p & Best 2p \\\\ \\midrule\n'
 
     def f(method_name):
         s = METHODS[method_name][0]
@@ -212,8 +200,8 @@ def create_table(results):
                         'Deconvolution', 'FeatureAblation', 'FeaturePermutation', 'ShapleyValueSampling']:
         s += f(method_name)
     s += '\\midrule\n'
-    for method_name in ['mRMR', 'LassoNet', 'Relief', 'CAE', 'FSNet', 'CancelOut_Softmax', 'CancelOut_Sigmoid', 'DeepPINK_DK',
-                        'DeepPINK_2o', 'RF']:
+    for method_name in ['mRMR', 'LassoNet', 'Relief', 'CAE', 'FSNet', 'CancelOut_Softmax', 'CancelOut_Sigmoid',
+                        'DeepPINK_U', 'DeepPINK_2o', 'RF']:
         s += f(method_name)
 
     s += '\\bottomrule\n'
@@ -223,6 +211,47 @@ def create_table(results):
     return s
 
 
+# Plot datasets
+def load_dataset(filename, n_features):
+    filepath = os.path.join(DATA_PATH, filename)
+    column_names = [f'x{i}' for i in range(n_features)] + ['y']
+    df = pd.read_csv(filepath, delimiter=',', header=None, names=column_names)
+    y = df['y'].to_numpy().astype(int)
+    df.drop('y', axis=1, inplace=True)
+    X = df.to_numpy().astype(np.float32)
+    return X, y
+'ring-xor-sum_1000samples-6feat.csv'
+'ring+xor-4feat.csv'
+'ring-2feat.csv'
+
+datasets = [
+    ('ring_1000samples-2feat.csv', 2, 'RING'),
+    ('xor_1000samples-2feat.csv', 2, 'XOR'),
+    ('ring+xor_1000samples-4feat.csv', 4, 'RING+XOR'),
+    ('ring-xor-sum_1000samples-6feat.csv', 6, 'RING+XOR+SUM'),
+]
+_, axs = plt.subplots(3, 4, figsize=(16, 8))
+for j, (filename, n_features, title) in enumerate(datasets):
+    X, y = load_dataset(filename, n_features)
+    for i in range(0, n_features // 2):
+        if i == 0:
+            axs[i, j].set_title(title, fontname='Century gothic', fontdict={'fontsize': 20})
+        mask = (y == 0)
+        s = 10
+        axs[i, j].scatter(X[mask, 2 * i], X[mask, 2 * i + 1], s=s, alpha=0.5, color='salmon')
+        axs[i, j].scatter(X[~mask, 2 * i], X[~mask, 2 * i + 1], s=s, alpha=0.5, color='royalblue')
+        axs[i, j].set_xlabel(f'Feature {i * 2 + 1}', fontname='Century gothic')
+        axs[i, j].set_ylabel(f'Feature {i * 2 + 2}', fontname='Century gothic')
+    for i in range(n_features // 2, 3):
+        axs[i, j].get_xaxis().set_visible(False)
+        axs[i, j].get_yaxis().set_visible(False)
+        for spine in axs[i, j].spines:
+            axs[i, j].spines[spine].set_visible(False)
+plt.tight_layout()
+plt.savefig(os.path.join(OUTPUT_PATH, 'datasets.eps'), transparent=True)
+
+
+# Plot performance
 results = {}
 for dataset_name in ['xor', 'ring', 'ring+xor', 'ring+xor+sum']:
     results[dataset_name] = {}
@@ -236,36 +265,37 @@ for dataset_name in ['xor', 'ring', 'ring+xor', 'ring+xor+sum']:
                 'best-2k': np.nan
             }
 
-load_pietro_results(os.path.join(DATA_PATH, 'pietro', 'XOR_kfeat-2kfeat.csv'), results['xor'])
-load_pietro_results(os.path.join(DATA_PATH, 'pietro', 'XOR_AUC-AUPRC.csv'), results['xor'])
+extra_method_names = ['cae', 'canceloutsigmoid', 'canceloutsoftmax', 'deeppinku', 'deeppink2o', 'fsnet', 'lassonet', 'mrmr', 'nnfs', 'relief', 'rf']
+for method_name in extra_method_names:
+    load_extra_results(os.path.join(RESULTS_PATH, f'{method_name}-xor.txt'), results['xor'])
 load_nn_results(os.path.join(RESULTS_PATH, 'resultsXOR.txt'), results['xor'])
-load_extra_results(os.path.join(RESULTS_PATH, 'extra-xor.txt'), results['xor'])
-plot_performance(results['xor'], [4, 8, 16, 32, 64, 128, 256, 512])
-plt.savefig(os.path.join(OUTPUT_PATH, 'benchmark-xor.eps'), transparent=True)
+plot_performance(results['xor'], [4, 8, 16, 32, 64, 128, 256, 512], 2)
+# plt.show()
+plt.savefig(os.path.join(OUTPUT_PATH, 'benchmark-xor.png'), transparent=True)
 plt.clf()
 
-load_pietro_results(os.path.join(DATA_PATH, 'pietro', 'RING_kfeat-2kfeat.csv'), results['ring'])
-load_pietro_results(os.path.join(DATA_PATH, 'pietro', 'RING_AUC-AUPRC.csv'), results['ring'])
+for method_name in extra_method_names:
+    load_extra_results(os.path.join(RESULTS_PATH, f'{method_name}-ring.txt'), results['ring'])
 load_nn_results(os.path.join(RESULTS_PATH, 'resultsRING.txt'), results['ring'])
-load_extra_results(os.path.join(RESULTS_PATH, 'extra-ring.txt'), results['ring'])
-plot_performance(results['ring'], [4, 8, 16, 32, 64, 128, 256, 512])
-plt.savefig(os.path.join(OUTPUT_PATH, 'benchmark-ring.eps'), transparent=True)
+plot_performance(results['ring'], [4, 8, 16, 32, 64, 128, 256, 512], 2)
+# plt.show()
+plt.savefig(os.path.join(OUTPUT_PATH, 'benchmark-ring.png'), transparent=True)
 plt.clf()
 
-load_pietro_results(os.path.join(DATA_PATH, 'pietro', 'RING+XOR_kfeat-2kfeat.csv'), results['ring+xor'])
-load_pietro_results(os.path.join(DATA_PATH, 'pietro', 'RING+XOR_AUC-AUPRC.csv'), results['ring+xor'])
+for method_name in extra_method_names:
+    load_extra_results(os.path.join(RESULTS_PATH, f'{method_name}-ring+xor.txt'), results['ring+xor'])
 load_nn_results(os.path.join(RESULTS_PATH, 'resultsRING+XOR.txt'), results['ring+xor'])
-load_extra_results(os.path.join(RESULTS_PATH, 'extra-ring+xor.txt'), results['ring+xor'])
-plot_performance(results['ring+xor'], [4, 8, 16, 32, 64, 128, 256, 512])
-plt.savefig(os.path.join(OUTPUT_PATH, 'benchmark-ring-xor.eps'), transparent=True)
+plot_performance(results['ring+xor'], [4, 8, 16, 32, 64, 128, 256, 512], 4)
+#plt.show()
+plt.savefig(os.path.join(OUTPUT_PATH, 'benchmark-ring-xor.png'), transparent=True)
 plt.clf()
 
-load_pietro_results(os.path.join(DATA_PATH, 'pietro', 'RING+XOR+SUM_kfeat-2kfeat.csv'), results['ring+xor+sum'])
-load_pietro_results(os.path.join(DATA_PATH, 'pietro', 'RING+XOR+SUM_AUC-AUPRC.csv'), results['ring+xor+sum'])
+for method_name in extra_method_names:
+    load_extra_results(os.path.join(RESULTS_PATH, f'{method_name}-ring+xor+sum.txt'), results['ring+xor+sum'])
 load_nn_results(os.path.join(RESULTS_PATH, 'resultsRING+XOR+SUM.txt'), results['ring+xor+sum'])
-load_extra_results(os.path.join(RESULTS_PATH, 'extra-ring+xor+sum.txt'), results['ring+xor+sum'])
-plot_performance(results['ring+xor+sum'], [6, 8, 16, 32, 64, 128, 256, 512])
-plt.savefig(os.path.join(OUTPUT_PATH, 'benchmark-ring-xor-sum.eps'), transparent=True)
+plot_performance(results['ring+xor+sum'], [6, 8, 16, 32, 64, 128, 256, 512], 6)
+#plt.show()
+plt.savefig(os.path.join(OUTPUT_PATH, 'benchmark-ring-xor-sum.png'), transparent=True)
 plt.clf()
 
 with open(os.path.join(TABLES_PATH, 'table.tex'), 'w') as f:

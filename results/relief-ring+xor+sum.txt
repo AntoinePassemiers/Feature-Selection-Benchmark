@@ -1,0 +1,9 @@
+Dataset	Relief_bestK	Relief_best2K
+ring-xor-sum_1000samples-6feat.csv	1.0	1.0
+ring-xor-sum_1000samples-8feat.csv	0.8333333333333334	1.0
+ring-xor-sum_1000samples-16feat.csv	0.6388888888888888	0.888888888888889
+ring-xor-sum_1000samples-32feat.csv	0.5277777777777778	0.8333333333333334
+ring-xor-sum_1000samples-64feat.csv	0.25	0.3611111111111111
+ring-xor-sum_1000samples-128feat.csv	0.25	0.3055555555555556
+ring-xor-sum_1000samples-256feat.csv	0.3611111111111111	0.4444444444444444
+ring-xor-sum_1000samples-512feat.csv	0.1111111111111111	0.13888888888888887

@@ -31,8 +31,7 @@ from matplotlib import patches
 from sklearn.metrics import roc_curve, auc, average_precision_score
 import captum.attr
 
-import nn_wrapper
-
+from src import nn_wrapper
 
 SA_METHODS = {
     'Saliency': 'Saliency',
@@ -113,18 +112,12 @@ def main_pred(input_filename, realFeatPos, dataset_name):
         test = folds.pop(0)
         train = [x for f in folds for x in f]
         X, Y = build_vectors(train, xdb, ydb)
-        if dataset_name == 'ring':
-            model = nn_wrapper.RingModel(len(X[0]))
-            learning_rate = 1e-1
-        else:
-            model = nn_wrapper.GeneralPurposeModel(len(X[0]))
-            learning_rate = 1e-3
-        wrapper = nn_wrapper.NNwrapper(model)
-        wrapper.fit(X, Y, "cpu", learning_rate=learning_rate)
-        y_hat = wrapper.predict(X, "cpu")
+        wrapper = nn_wrapper.NNwrapper.create(dataset_name, len(X[0]))
+        wrapper.fit(X, Y)
+        y_hat = wrapper.predict(X)
         compute_scores(y_hat, Y, verbose=True)
         x, y = build_vectors(test, xdb, ydb)
-        yp = wrapper.predict(x, "cpu")
+        yp = wrapper.predict(x)
 
         sen, spe, acc, bac, pre, mcc, auc_score, auprc = compute_scores(yp, y, verbose=True)
         auc_scores.append(auc_score)
@@ -138,34 +131,34 @@ def main_pred(input_filename, realFeatPos, dataset_name):
             tmp_x.requires_grad_()
             baselines = torch.zeros((1, tmp_x.size()[-1]))
             if "IG_noMul" == method_name:
-                ig = captum.attr.IntegratedGradients(model, multiply_by_inputs=False)
+                ig = captum.attr.IntegratedGradients(wrapper.model, multiply_by_inputs=False)
                 attr = ig.attribute(tmp_x, target=0, return_convergence_delta=False, baselines=baselines)
             elif "Saliency" == method_name:
-                ig = captum.attr.Saliency(model)
+                ig = captum.attr.Saliency(wrapper.model)
                 attr = ig.attribute(tmp_x, target=0, abs=True)
             elif "DeepLift" == method_name:
-                ig = captum.attr.DeepLift(model, multiply_by_inputs=False)
+                ig = captum.attr.DeepLift(wrapper.model, multiply_by_inputs=False)
                 attr = ig.attribute(tmp_x, target=0, return_convergence_delta=False, baselines=baselines)
             elif "InputXGradient" == method_name:
-                ig = captum.attr.InputXGradient(model)
+                ig = captum.attr.InputXGradient(wrapper.model)
                 attr = ig.attribute(tmp_x, target=0)
             elif "SmoothGrad" == method_name:
-                ig = captum.attr.NoiseTunnel(captum.attr.Saliency(model))
+                ig = captum.attr.NoiseTunnel(captum.attr.Saliency(wrapper.model))
                 attr = ig.attribute(tmp_x, target=0, nt_samples=50, stdevs=0.1)
             elif "GuidedBackprop" == method_name:
-                ig = captum.attr.GuidedBackprop(model)
+                ig = captum.attr.GuidedBackprop(wrapper.model)
                 attr = ig.attribute(tmp_x, target=0)
             elif "Deconvolution" == method_name:
-                ig = captum.attr.Deconvolution(model)
+                ig = captum.attr.Deconvolution(wrapper.model)
                 attr = ig.attribute(tmp_x, target=0)
             elif "FeatureAblation" == method_name:
-                ig = captum.attr.FeatureAblation(model)
+                ig = captum.attr.FeatureAblation(wrapper.model)
                 attr = ig.attribute(tmp_x, target=0, baselines=baselines)
             elif "FeaturePermutation" == method_name:
-                ig = captum.attr.FeaturePermutation(model)
+                ig = captum.attr.FeaturePermutation(wrapper.model)
                 attr = ig.attribute(tmp_x, target=0)
             elif "ShapleyValueSampling" == method_name:
-                ig = captum.attr.ShapleyValueSampling(model)
+                ig = captum.attr.ShapleyValueSampling(wrapper.model)
                 attr = ig.attribute(tmp_x, target=0, baselines=baselines)
             else:
                 raise NotImplementedError(method_name)

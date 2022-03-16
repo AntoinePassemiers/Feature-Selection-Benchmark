@@ -1,0 +1,9 @@
+numpy
+scipy
+pandas
+torch
+captum
+sklearn
+tensorflow==2.1.0
+keras==2.3.0
+concrete_autoencoder==0.0.1
