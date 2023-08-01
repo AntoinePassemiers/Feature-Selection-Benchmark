@@ -1,0 +1,11 @@
+Dataset	ShapleyValueSampling_bestK	ShapleyValueSampling_best2K
+ring+xor_4_500	1.0	1.0
+ring+xor_8_500	0.6666666666666666	1.0
+ring+xor_16_500	0.5833333333333334	0.8333333333333334
+ring+xor_32_500	0.0	0.16666666666666666
+ring+xor_64_500	0.041666666666666664	0.125
+ring+xor_128_500	0.0	0.0
+ring+xor_256_500	0.0	0.0
+ring+xor_512_500	0.0	0.0
+ring+xor_1024_500	0.0	0.0
+ring+xor_2048_500	0.0	0.0

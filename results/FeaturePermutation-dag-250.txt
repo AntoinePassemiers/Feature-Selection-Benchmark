@@ -1,0 +1,2 @@
+Dataset	FeaturePermutation_bestK	FeaturePermutation_best2K	FeaturePermutation_bestK2	FeaturePermutation_best2K2
+dag_2000_250	0.14285714285714282	0.19047619047619047	0.10493827160493825	0.1419753086419753

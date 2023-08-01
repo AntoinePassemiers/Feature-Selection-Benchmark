@@ -1,0 +1,2 @@
+Dataset	GuidedBackprop_bestK	GuidedBackprop_best2K	GuidedBackprop_bestK2	GuidedBackprop_best2K2
+dag_2000_1000	0.14285714285714285	0.21428571428571427	0.09465020576131684	0.14609053497942387

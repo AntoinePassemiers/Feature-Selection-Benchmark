@@ -1,0 +1,2 @@
+Dataset	ShapleyValueSampling_bestK	ShapleyValueSampling_best2K	ShapleyValueSampling_bestK2	ShapleyValueSampling_best2K2
+dag_2000_250	0.16666666666666663	0.16666666666666663	0.09670781893004116	0.15020576131687244

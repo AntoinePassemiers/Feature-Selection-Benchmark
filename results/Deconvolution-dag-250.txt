@@ -1,0 +1,2 @@
+Dataset	Deconvolution_bestK	Deconvolution_best2K	Deconvolution_bestK2	Deconvolution_best2K2
+dag_2000_250	0.16666666666666663	0.21428571428571427	0.09465020576131689	0.1419753086419753

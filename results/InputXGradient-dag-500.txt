@@ -1,0 +1,2 @@
+Dataset	InputXGradient_bestK	InputXGradient_best2K	InputXGradient_bestK2	InputXGradient_best2K2
+dag_2000_500	0.23809523809523805	0.28571428571428564	0.11934156378600824	0.1646090534979424

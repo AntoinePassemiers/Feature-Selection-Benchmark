@@ -1,0 +1,2 @@
+Dataset	FeatureAblation_bestK	FeatureAblation_best2K	FeatureAblation_bestK2	FeatureAblation_best2K2
+dag_2000_1000	0.23809523809523805	0.3095238095238095	0.12345679012345678	0.1625514403292181

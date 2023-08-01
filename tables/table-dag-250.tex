@@ -1,0 +1,31 @@
+\begin{table}[h!]
+\centering
+\label{tab:benchmark-dag}{\resizebox{\columnwidth}{!}{\begin{tabular}{lrrrrrr}\toprule
+Dataset & \multicolumn{2}{c}{\% causal features} & \multicolumn{2}{c}{\% correlated features} & \multicolumn{2}{c}{Performance (\%)} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
+Method & Best p & Best 2p & Best p & Best 2p & AUROC & AUPRC \\ \midrule
+Saliency maps & 16.7 & 21.4 & 9.5 & 14.2 & - & - \\
+Integrated gradient & 16.7 & 21.4 & 9.3 & 14.2 & - & - \\
+DeepLift & 16.7 & 21.4 & 9.3 & 14.0 & - & - \\
+Input $\times$ Gradient & 16.7 & 19.0 & 9.7 & 15.4 & - & - \\
+SmoothGrad & 16.7 & 21.4 & 9.5 & 14.2 & - & - \\
+Guided backpropagation & 16.7 & 21.4 & 9.5 & 14.2 & - & - \\
+Deconvolution & 16.7 & 21.4 & 9.5 & 14.2 & - & - \\
+Feature ablation & 16.7 & 19.0 & 9.7 & 15.4 & - & - \\
+Feature permutation & 14.3 & 19.0 & 10.5 & 14.2 & - & - \\
+Shapley value sampling & 16.7 & 16.7 & 9.7 & 15.0 & - & - \\
+\midrule
+mRMR & 14.3 & 19.0 & 4.9 & 8.8 & - & - \\
+LassoNet & 14.3 & 14.3 & 7.8 & 11.9 & 71.3 & 65.5 \\
+Relief & 14.3 & 16.7 & 6.8 & 10.3 & - & - \\
+Concrete Autoencoder & 9.5 & 11.9 & 5.1 & 10.9 & 45.4 & 48.7 \\
+FSNet & 0.0 & 0.0 & 3.7 & 8.8 & 50.4 & 50.0 \\
+CancelOut (softmax) & 14.3 & 16.7 & 6.4 & 10.7 & 53.0 & 52.8 \\
+CancelOut (sigmoid) & 14.3 & 14.3 & 9.9 & 15.2 & 60.9 & 61.2 \\
+DeepPINK & 0.0 & 0.0 & 4.3 & 8.0 & 49.4 & 49.8 \\
+Random Forest & 23.8 & 35.7 & 11.1 & 17.1 & 75.3 & 73.6 \\
+TreeSHAP & 23.8 & 40.5 & 12.1 & 16.9 & - & - \\
+\bottomrule
+\end{tabular}}}{}
+\caption{Best p and best 2p scores of all feature selection methods on the DAG dataset. $p=7$ when considering only causal features as relevant (first multi-column) and $p=81$ when also including confouders (second multi-column). Additionally, AUROC and AUPRC scores have been reported for embedded methods.}
+\end{table}
