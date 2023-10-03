@@ -19,8 +19,6 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
-import time
-
 import captum.attr
 import numpy as np
 import torch
@@ -55,8 +53,9 @@ class GaussianNoise(torch.nn.Module):
 
 class Model(torch.nn.Module):
 
-    def __init__(self, input_size, latent_size=16):
+    def __init__(self, input_size, n_classes, latent_size=16):
         torch.nn.Module.__init__(self)
+        n_out = 1 if (n_classes <= 2) else n_classes
         self.layers = torch.nn.Sequential(
             GaussianNoise(0.1),
             torch.nn.Linear(input_size, latent_size),
@@ -65,7 +64,7 @@ class Model(torch.nn.Module):
             torch.nn.Linear(latent_size, latent_size),
             #torch.nn.Dropout(p=0.7),
             torch.nn.LeakyReLU(0.2),
-            torch.nn.Linear(latent_size, 1))
+            torch.nn.Linear(latent_size, n_out))
         self.apply(init_weights)
             
     def forward(self, x):
@@ -74,10 +73,10 @@ class Model(torch.nn.Module):
 
 class ModelWithCancelOut(torch.nn.Module):
 
-    def __init__(self, input_size, latent_size=16, cancel_out_activation='sigmoid'):
+    def __init__(self, input_size, n_classes, latent_size=16, cancel_out_activation='sigmoid'):
         torch.nn.Module.__init__(self)
         self.cancel_out = CancelOut(input_size, activation=cancel_out_activation)
-        self.model = Model(input_size, latent_size=latent_size)
+        self.model = Model(input_size, n_classes, latent_size=latent_size)
 
     def forward(self, x):
         x = self.cancel_out(x)
@@ -86,8 +85,9 @@ class ModelWithCancelOut(torch.nn.Module):
 
 class NNwrapper:
 
-    def __init__(self, model):
+    def __init__(self, model, n_classes):
         self.model = model
+        self.n_classes = n_classes
         self.loss_callbacks = []
         self.trained = False
 
@@ -95,12 +95,16 @@ class NNwrapper:
         self.loss_callbacks.append(func)
 
     def fit(self, X, Y, device='cpu', learning_rate=0.0005, epochs=1000, batch_size=64, weight_decay=1e-2, val=0.2):
+
         X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=val)
 
         dataset = TrainingSet(X_train, y_train)
         val_dataset = TrainingSet(X_test, y_test)
         self.model.train()
-        criterion = torch.nn.BCEWithLogitsLoss(reduction='mean')
+        if self.n_classes <= 2:
+            criterion = torch.nn.BCEWithLogitsLoss(reduction='mean')
+        else:
+            criterion = torch.nn.NLLLoss(reduction='mean')
 
         optimizer = torch.optim.Adam(
             self.model.parameters(), lr=learning_rate, weight_decay=weight_decay)
@@ -119,9 +123,12 @@ class NNwrapper:
             total_error = 0
             for x, y in loader:
                 x = x.to(device)
-                y = y.to(device).unsqueeze(1)
+                y = y.to(device)
                 optimizer.zero_grad()
                 y_hat = self.model.forward(x)
+                if self.n_classes >= 2:
+                    y_hat = torch.log_softmax(y_hat, dim=1)
+
                 loss = criterion(y_hat, y)
                 for loss_callback in self.loss_callbacks:
                     loss = loss + loss_callback()  # Add regularisation terms
@@ -135,7 +142,7 @@ class NNwrapper:
                 val_total_error = 0
                 for x, y in val_loader:
                     x = x.to(device)
-                    y = y.to(device).unsqueeze(1)
+                    y = y.to(device)
                     y_hat = self.model.forward(x)
                     loss = criterion(y_hat, y)
                     val_total_error += loss.item()
@@ -165,6 +172,10 @@ class NNwrapper:
         for sample in loader:
             x = sample.to(device)
             y_pred = self.model.forward(x)
+            if self.n_classes <= 2:
+                y_pred = torch.sigmoid(y_pred)
+            else:
+                y_pred = torch.softmax(y_pred, dim=1)
             predictions += y_pred.data.squeeze().tolist()
         return np.array(predictions)
 
@@ -177,25 +188,25 @@ class NNwrapper:
         return np.mean(np.abs(scores), axis=0)
 
     @staticmethod
-    def create(dataset_name, n_input, arch='nn'):
-        assert dataset_name in {'dag', 'xor', 'ring', 'ring+xor', 'ring+xor+sum'}
+    def create(dataset_name, n_input, n_classes, arch='nn'):
+        # assert dataset_name in {'dag', 'xor', 'ring', 'ring+xor', 'ring+xor+sum'}
         loss_callbacks = []
         if arch == 'nn':
-            model = Model(n_input)
+            model = Model(n_input, n_classes)
         elif arch == 'cancelout-sigmoid':
-            model = ModelWithCancelOut(n_input, cancel_out_activation='sigmoid')
+            model = ModelWithCancelOut(n_input, n_classes, cancel_out_activation='sigmoid')
             loss_callbacks.append(lambda: model.cancel_out.weight_loss())
         elif arch == 'cancelout-softmax':
-            model = ModelWithCancelOut(n_input, cancel_out_activation='softmax')
+            model = ModelWithCancelOut(n_input, n_classes, cancel_out_activation='softmax')
         elif arch == 'deeppink':
             _lambda = 0.05 * np.sqrt(2.0 * np.log(n_input) / 1000)
-            model = DeepPINK(Model(n_input), n_input)
+            model = DeepPINK(Model(n_input, n_classes), n_input)
             for layer in model.children():
                 if isinstance(layer, torch.nn.Linear):
                     loss_callbacks.append(lambda: _lambda * torch.sum(torch.abs(layer.weight)))
         else:
             raise NotImplementedError(f'Unknown neural architecture "{arch}"')
-        wrapper = NNwrapper(model)
+        wrapper = NNwrapper(model, n_classes)
         for loss_callback in loss_callbacks:
             wrapper.add_loss_callback(loss_callback)
         return wrapper

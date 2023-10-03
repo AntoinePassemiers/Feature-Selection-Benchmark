@@ -27,7 +27,7 @@ class TrainingSet(torch.utils.data.Dataset):
     def __init__(self, X, Y):
         assert len(Y) == len(X)        
         self.X = torch.tensor(X, dtype=torch.float32)
-        self.Y = torch.tensor(Y, dtype=torch.float32)
+        self.Y = torch.tensor(Y, dtype=torch.long)
         
     def __len__(self):
         return len(self.X)
