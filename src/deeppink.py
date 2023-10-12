@@ -38,6 +38,7 @@ class DeepPINK(torch.nn.Module):
         self.n_input = n_input
         self.lc1 = LocallyConnected1d(n_input, 2)
         self.lc2 = LocallyConnected1d(n_input, 1)
+        torch.nn.init.xavier_normal_(self.lc2.weight)
         self.model = model
 
     def forward(self, X):

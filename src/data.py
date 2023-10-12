@@ -71,7 +71,7 @@ def generate_dataset(dataset_name: str, n_samples: int, n_features: int) -> Tupl
         raise NotImplementedError(f'Unknown dataset "{dataset_name}"')
 
     # Generate knockoff features for DeepPINK
-    X_tilde = np.random.uniform(-1, 1, X.shape)
+    X_tilde = np.random.uniform(0, 1, X.shape)
 
     print(f'Class imbalance: {np.mean(y)}')
 

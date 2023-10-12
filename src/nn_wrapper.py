@@ -36,7 +36,7 @@ def init_weights(m):
             torch.nn.init.xavier_uniform_(m.weight)
         else:
             torch.nn.init.kaiming_uniform_(m.weight, nonlinearity='leaky_relu')
-        # m.bias.data.fill_(1e-3)
+        m.bias.data.fill_(1e-3)
 
 
 class GaussianNoise(torch.nn.Module):
@@ -57,12 +57,11 @@ class Model(torch.nn.Module):
         torch.nn.Module.__init__(self)
         n_out = 1 if (n_classes <= 2) else n_classes
         self.layers = torch.nn.Sequential(
+            # torch.nn.LayerNorm(input_size),
             GaussianNoise(0.1),
             torch.nn.Linear(input_size, latent_size),
-            #torch.nn.Dropout(p=0.7),
             torch.nn.LeakyReLU(0.2),
             torch.nn.Linear(latent_size, latent_size),
-            #torch.nn.Dropout(p=0.7),
             torch.nn.LeakyReLU(0.2),
             torch.nn.Linear(latent_size, n_out))
         self.apply(init_weights)
@@ -96,10 +95,22 @@ class NNwrapper:
 
     def fit(self, X, Y, device='cpu', learning_rate=0.0005, epochs=1000, batch_size=64, weight_decay=1e-2, val=0.2):
 
-        X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=val)
+        if val > 0:
+            X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=val)
+        else:
+            X_train, y_train = X, Y
+            X_test = np.asarray([])
+            y_test = np.asarray([])
 
         dataset = TrainingSet(X_train, y_train)
-        val_dataset = TrainingSet(X_test, y_test)
+        loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, sampler=None, num_workers=0)
+        
+        if val > 0:
+            val_dataset = TrainingSet(X_test, y_test)
+            val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True, sampler=None, num_workers=0)
+        else:
+            val_loader = None
+
         self.model.train()
         if self.n_classes <= 2:
             criterion = torch.nn.BCEWithLogitsLoss(reduction='mean')
@@ -112,9 +123,6 @@ class NNwrapper:
             optimizer, mode='min', factor=0.9, patience=10, verbose=False, threshold=0.0001,
             threshold_mode='rel', cooldown=5, min_lr=1e-5, eps=1e-08)
 
-        loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, sampler=None, num_workers=0)
-        val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True, sampler=None, num_workers=0)
-
         n_epochs_without_improvement = 0
         state_dict_history = []
         for e in range(epochs):
@@ -126,10 +134,13 @@ class NNwrapper:
                 y = y.to(device)
                 optimizer.zero_grad()
                 y_hat = self.model.forward(x)
-                if self.n_classes >= 2:
+                if self.n_classes > 2:
                     y_hat = torch.log_softmax(y_hat, dim=1)
+                else:
+                    y_hat = torch.squeeze(y_hat)
 
                 loss = criterion(y_hat, y)
+                # loss = criterion(y_hat, y.float())
                 for loss_callback in self.loss_callbacks:
                     loss = loss + loss_callback()  # Add regularisation terms
                 loss.backward()
@@ -137,29 +148,36 @@ class NNwrapper:
                 total_error += loss.item()
             scheduler.step(total_error)
 
-            # Validation error
-            with torch.no_grad():
-                val_total_error = 0
-                for x, y in val_loader:
-                    x = x.to(device)
-                    y = y.to(device)
-                    y_hat = self.model.forward(x)
-                    loss = criterion(y_hat, y)
-                    val_total_error += loss.item()
+            if val_loader is not None:
+                # Validation error
+                with torch.no_grad():
+                    val_total_error = 0
+                    for x, y in val_loader:
+                        x = x.to(device)
+                        y = y.to(device)
+                        y_hat = self.model.forward(x)
+                        if self.n_classes > 2:
+                            y_hat = torch.log_softmax(y_hat, dim=1)
+                        else:
+                            y_hat = torch.squeeze(y_hat)
+                        loss = criterion(y_hat, y)
+                        # loss = criterion(y_hat, y.float())
+                        val_total_error += loss.item()
 
-            # Keep track of parameters
-            state_dict_history.append((val_total_error, self.model.state_dict()))
-            if len(state_dict_history) >= 2:
-                if state_dict_history[-1][0] >= state_dict_history[-2][0]:
-                    n_epochs_without_improvement += 1
-                    if n_epochs_without_improvement >= 5:
-                        break
-                else:
-                    n_epochs_without_improvement = 0
+                # Keep track of parameters
+                state_dict_history.append((val_total_error, self.model.state_dict()))
+                if len(state_dict_history) >= 2:
+                    if state_dict_history[-1][0] >= state_dict_history[-2][0]:
+                        n_epochs_without_improvement += 1
+                        if n_epochs_without_improvement >= 5:
+                            break
+                    else:
+                        n_epochs_without_improvement = 0
 
         # Restore best parameters
-        i = np.argmin([error for error, state_dict in state_dict_history])
-        self.model.load_state_dict(state_dict_history[i][1])
+        if val > 0:
+            i = np.argmin([error for error, state_dict in state_dict_history])
+            self.model.load_state_dict(state_dict_history[i][1])
 
         self.model.eval()
         self.trained = True

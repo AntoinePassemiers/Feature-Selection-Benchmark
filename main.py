@@ -24,19 +24,16 @@ import os
 
 import captum.attr
 import numpy as np
-import pandas as pd
 import torch
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import roc_auc_score, average_precision_score
 from sklearn.model_selection import KFold
-from sklearn.feature_selection import mutual_info_classif
+from sklearn.preprocessing import StandardScaler
 
 from src.core import run_fs_method
 from src.dag import load_dag_dataset
 from src.data import generate_dataset
-from src.fsnet import FSNet
-from src.nn_wrapper import NNwrapper, Model
-from src.relief import relief
+from src.nn_wrapper import NNwrapper
+
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(ROOT, 'data')
@@ -157,8 +154,8 @@ def run_method(splits, X, X_tilde, y, method_name, dataset_name, k, k2=None, h_s
                 dataset_name, method_name, X_train, X_tilde_train,
                 y_train, X_test, X_tilde_test, k
             )
-            y_train = y_train[:, 1]
-            y_train_hat = y_train_hat[:, 1]
+            y_train = y_train
+            y_train_hat = y_train_hat
 
         if scores is not None:
             assert scores.shape == (n_features,)
@@ -203,13 +200,13 @@ def process_dataset_(method_name, dataset_name, k, ns, n_samples=1000):
                     idx = np.arange(len(X))
                     np.random.shuffle(idx)
                     X, X_tilde, y = X[idx], X_tilde[idx], y[idx]
+                X = StandardScaler().fit_transform(X)
+                X_tilde = StandardScaler().fit_transform(X_tilde)
             else:
                 X, X_tilde, y = generate_dataset(dataset_name, n_samples, n_features)
                 k2 = None
-
-            # Centering the data
-            X = 2. * X - 1.
-            X_tilde = 2. * X_tilde - 1.
+                X = 2. * X - 1.
+                X_tilde = 2. * X_tilde - 1.
 
             splits = list(KFold(n_splits=6).split(X))
             best_k, best_2k, best_k2, best_2k2, train_aurocs, train_auprcs, aurocs, auprcs = run_method(
@@ -345,9 +342,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     for n_samples in [1000]:
-        process_dataset(args.method, 'dag', 6, [2000], n_samples=n_samples)
         ns = [8, 16, 32, 64, 128, 256, 512, 1024, 2048]
         process_dataset(args.method, 'ring+xor+sum', 6, [6] + ns, n_samples=n_samples)
         process_dataset(args.method, 'ring+xor', 4, [4] + ns, n_samples=n_samples)
         process_dataset(args.method, 'ring', 2, [2, 4] + ns, n_samples=n_samples)
         process_dataset(args.method, 'xor', 2, [2, 4] + ns, n_samples=n_samples)
+        process_dataset(args.method, 'dag', 6, [2000], n_samples=n_samples)

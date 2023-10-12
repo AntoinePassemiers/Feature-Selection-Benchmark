@@ -67,8 +67,8 @@ def run_fs_method(
         scores2 = scores
     elif method_name == 'fsnet':
         n_selected = min(2 * k, n_features)
-        fsnet = FSNet(Model(n_selected, n_classes), n_features, 30, n_selected)
-        fsnet.fit(X_train, y_train)
+        fsnet = FSNet(Model(n_selected, n_classes), n_features, 30, n_selected, n_classes)
+        fsnet.fit(X_train, y_train, n_epochs=30)  # TODO
         y_train_hat = fsnet.predict(X_train)
         y_hat = fsnet.predict(X_test)
         scores = fsnet.get_feature_importances()
@@ -90,8 +90,8 @@ def run_fs_method(
         val_losses = [save.val_loss for save in path]
         state_dict = path[np.argmin(val_losses)].state_dict
         model.load(state_dict)
-        y_train_hat = model.predict(X_train)
-        y_hat = model.predict(X_test)
+        y_train_hat = model.predict_proba(X_train)
+        y_hat = model.predict_proba(X_test)
     elif method_name == 'mrmr':
         import pymrmr
         n_bins = 20
@@ -183,6 +183,8 @@ def run_fs_method(
         y_hat = clf.predict_proba(X_test)
     else:
         raise NotImplementedError(f'Unknown FS method "{method_name}"')
-    assert y_hat.shape[1] == n_classes
-    assert y_train_hat.shape[1] == n_classes
+
+    if n_classes > 2:
+        assert y_hat.shape[1] == n_classes
+        assert y_train_hat.shape[1] == n_classes
     return y_train_hat, y_hat, scores, scores2

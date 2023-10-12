@@ -202,12 +202,13 @@ class Reconstruction(torch.nn.Module):
 
 class FSNet(torch.nn.Module):
 
-    def __init__(self, model, n_input, n_bins, n_selected):
+    def __init__(self, model, n_input, n_bins, n_selected, n_classes):
         torch.nn.Module.__init__(self)
         self.model = model
         self.n_input = n_input
         self.n_bins = n_bins
         self.n_selected = n_selected
+        self.n_classes = n_classes
         self.selector = Selector(n_input, n_bins, n_selected)
         self.encoder = Encoder(n_selected, n_selected)
         self.decoder = Decoder(n_selected, n_selected)
@@ -224,11 +225,15 @@ class FSNet(torch.nn.Module):
         loader = torch.utils.data.DataLoader(
             dataset, batch_size=batch_size, shuffle=True, sampler=None, num_workers=0)
         self.model.train()
-        criterion = torch.nn.BCEWithLogitsLoss(reduction='mean')
+        if self.n_classes <= 2:
+            criterion = torch.nn.BCEWithLogitsLoss(reduction='mean')
+        else:
+            criterion = torch.nn.NLLLoss(reduction='mean')
         optimizer = torch.optim.Adam(self.parameters(), lr=0.005, weight_decay=weight_decay)
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
             optimizer, mode='min', factor=0.9, patience=10, verbose=False, threshold=0.0001,
             threshold_mode='rel', cooldown=5, min_lr=1e-5, eps=1e-08)
+
         for e in range(n_epochs):
 
             # Lower the temperature
@@ -256,10 +261,16 @@ class FSNet(torch.nn.Module):
                 assert not np.any(np.isnan(X_reconstructed.data.numpy()))
 
                 # Compute loss function
-                loss1 = criterion(y_hat.squeeze(1), _y)
+                if self.n_classes > 2:
+                    loss1 = criterion(y_hat, _y)
+                else:
+                    loss1 = criterion(torch.squeeze(y_hat), torch.squeeze(_y))
                 loss2 = _lambda * torch.mean((_X - X_reconstructed) ** 2)
                 loss = loss1 + loss2
-                # print(loss1.item(), loss2.item())
+
+                # print(_X.size(), X_subset.size(), X_latent.size(), y_hat.size(), X_reconstructed.size())
+
+                print(loss1.item(), loss2.item())
                 total_loss += loss.item()
 
                 # Update parameters
@@ -268,13 +279,19 @@ class FSNet(torch.nn.Module):
             scheduler.step(total_loss)
 
             # print(f'Total loss at epoch {e + 1}: {total_loss}')
+
         self.model.eval()
 
     def predict(self, X):
         X = torch.FloatTensor(X)
         X = self.selector.forward(X)
         X = self.encoder.forward(X)
-        return torch.squeeze(self.model.forward(X)).data.numpy()
+        y_pred = self.model.forward(X)
+        if self.n_classes <= 2:
+            y_pred = torch.sigmoid(y_pred)
+        else:
+            y_pred = torch.softmax(y_pred, dim=1)
+        return torch.squeeze(y_pred).data.numpy()
 
     def get_selected_features(self):
         return self.selector.get_selected_features()
