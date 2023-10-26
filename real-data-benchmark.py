@@ -42,18 +42,21 @@ if not os.path.isdir(RESULTS_PATH):
     os.makedirs(RESULTS_PATH)
 
 METHOD_NAMES = [
-    # 'fsnet',
-    'lassonet',
-    #'nn', 'rf', 'canceloutsigmoid', 'canceloutsoftmax',
+    #'fsnet',
+    #'lassonet',
+    #'nn',
+    #'rf',
+    'canceloutsigmoid',
+    #'canceloutsoftmax',
 ]
 
 for method_name in METHOD_NAMES:
 
     # for DATASET in ['fashion', 'isolet', 'mice', 'har', 'mnist', 'coil20']:
-    for DATASET in ['fashion']:
+    for DATASET in ['mnist']:
 
-        if os.path.exists(os.path.join(RESULTS_PATH, f'{DATASET}-{method_name}.json')):
-            continue
+        #if os.path.exists(os.path.join(RESULTS_PATH, f'{DATASET}-{method_name}.json')):
+        #    continue
 
         print(f'Running method "{method_name}" on dataset "{DATASET}"')
 

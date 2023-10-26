@@ -93,7 +93,7 @@ class NNwrapper:
     def add_loss_callback(self, func):
         self.loss_callbacks.append(func)
 
-    def fit(self, X, Y, device='cpu', learning_rate=0.0005, epochs=1000, batch_size=64, weight_decay=1e-2, val=0.2):
+    def fit(self, X, Y, device='cpu', learning_rate=0.0005, epochs=1000, batch_size=64, weight_decay=1e-5, val=0.2):
 
         if val > 0:
             X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=val)
@@ -220,6 +220,7 @@ class NNwrapper:
             _lambda = 0.05 * np.sqrt(2.0 * np.log(n_input) / 1000)
             model = DeepPINK(Model(n_input, n_classes), n_input)
             for layer in model.children():
+                # if isinstance(layer, torch.nn.Linear) and (layer.out_features > 1):
                 if isinstance(layer, torch.nn.Linear):
                     loss_callbacks.append(lambda: _lambda * torch.sum(torch.abs(layer.weight)))
         else:

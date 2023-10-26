@@ -68,9 +68,10 @@ def run_fs_method(
     elif method_name == 'fsnet':
         n_selected = min(2 * k, n_features)
         fsnet = FSNet(Model(n_selected, n_classes), n_features, 30, n_selected, n_classes)
-        fsnet.fit(X_train, y_train, n_epochs=30)  # TODO
+        fsnet.fit(X_train, y_train)
         y_train_hat = fsnet.predict(X_train)
         y_hat = fsnet.predict(X_test)
+        print(y_hat)
         scores = fsnet.get_feature_importances()
         scores2 = scores
     elif method_name == 'lassonet':
@@ -126,7 +127,7 @@ def run_fs_method(
             return x
 
         selector = ConcreteAutoencoderFeatureSelector(
-            K=k, output_function=nn, start_temp=10, min_temp=0.01, num_epochs=30,
+            K=k, output_function=nn, start_temp=10, min_temp=0.01, num_epochs=300,
             learning_rate=0.0001, tryout_limit=1)
         selector.fit(X_train, y_train)
         indices = selector.get_support(indices=True).flatten()

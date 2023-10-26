@@ -164,7 +164,7 @@ class Encoder(torch.nn.Module):
 
     def forward(self, X):
         # return self.layers(X)
-        return X
+        return X  # Identity function
 
 
 class Decoder(torch.nn.Module):
@@ -180,7 +180,7 @@ class Decoder(torch.nn.Module):
 
     def forward(self, X):
         # return self.layers(X)
-        return X
+        return X  # Identity function
 
 
 class Reconstruction(torch.nn.Module):
@@ -270,7 +270,7 @@ class FSNet(torch.nn.Module):
 
                 # print(_X.size(), X_subset.size(), X_latent.size(), y_hat.size(), X_reconstructed.size())
 
-                print(loss1.item(), loss2.item())
+                #print(loss1.item(), loss2.item())
                 total_loss += loss.item()
 
                 # Update parameters

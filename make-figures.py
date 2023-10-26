@@ -398,8 +398,11 @@ fa_method_names = [
 n_samples = 1000
 for dataset_name in ['dag', 'xor', 'ring', 'ring+xor', 'ring+xor+sum']:
     for method_name in fa_method_names:
+        print(f'Loading {method_name}-{dataset_name}-{n_samples}.txt')
         load_extra_results(os.path.join(RESULTS_PATH, f'{method_name}-{dataset_name}-{n_samples}.txt'), results[dataset_name])
+        print(f'Loading {method_name}-b-{dataset_name}-{n_samples}.txt')
         load_extra_results(os.path.join(RESULTS_PATH, f'{method_name}-b-{dataset_name}-{n_samples}.txt'), results_b[dataset_name])
+        print(f'Loading {method_name}-t-{dataset_name}-{n_samples}.txt')
         load_extra_results(os.path.join(RESULTS_PATH, f'{method_name}-t-{dataset_name}-{n_samples}.txt'), results_t[dataset_name])
 plot_fa_bars(results, results_b, results_t)
 plt.savefig(os.path.join(OUTPUT_PATH, 'bootstrapping.png'), transparent=True, dpi=400)
@@ -413,6 +416,7 @@ extra_method_names = [
     'SmoothGrad', 'ShapleyValueSampling', 'Saliency'
 ]
 
+"""
 method_name = 'nn'
 dataset_name = 'xor'
 train_aurocs, aurocs = [], []
@@ -434,14 +438,16 @@ ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 plt.legend()
 plt.show()
-
+"""
 
 # extra_method_names = ['treeshap', 'cae', 'canceloutsigmoid', 'canceloutsoftmax', 'deeppink', 'fsnet', 'lassonet', 'mrmr', 'relief', 'rf']
 for n_samples in [250, 500, 1000]:
     for method_name in extra_method_names:
+        print(f'Loading {method_name}-dag-{n_samples}.txt')
         load_extra_results(os.path.join(RESULTS_PATH, f'{method_name}-dag-{n_samples}.txt'), results['dag'])
 
     for method_name in extra_method_names:
+        print(f'Loading {method_name}-xor-{n_samples}.txt')
         load_extra_results(os.path.join(RESULTS_PATH, f'{method_name}-xor-{n_samples}.txt'), results['xor'])
     plot_performance(results['xor'], [4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048], 2)
     # plt.show()
@@ -449,6 +455,7 @@ for n_samples in [250, 500, 1000]:
     plt.clf()
 
     for method_name in extra_method_names:
+        print(f'Loading {method_name}-ring-{n_samples}.txt')
         load_extra_results(os.path.join(RESULTS_PATH, f'{method_name}-ring-{n_samples}.txt'), results['ring'])
     plot_performance(results['ring'], [4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048], 2)
     # plt.show()
@@ -456,6 +463,7 @@ for n_samples in [250, 500, 1000]:
     plt.clf()
 
     for method_name in extra_method_names:
+        print(f'Loading {method_name}-ring+xor-{n_samples}.txt')
         load_extra_results(os.path.join(RESULTS_PATH, f'{method_name}-ring+xor-{n_samples}.txt'), results['ring+xor'])
     plot_performance(results['ring+xor'], [4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048], 4)
     #plt.show()
@@ -463,6 +471,7 @@ for n_samples in [250, 500, 1000]:
     plt.clf()
 
     for method_name in extra_method_names:
+        print(f'Loading {method_name}-ring+xor+sum-{n_samples}.txt')
         load_extra_results(os.path.join(RESULTS_PATH, f'{method_name}-ring+xor+sum-{n_samples}.txt'), results['ring+xor+sum'])
     plot_performance(results['ring+xor+sum'], [6, 8, 16, 32, 64, 128, 256, 512, 1024, 2048], 6)
     #plt.show()

@@ -193,6 +193,7 @@ def process_dataset_(method_name, dataset_name, k, ns, n_samples=1000):
         row += f'\n'
         f.write(row)
         for n_features in ns:
+            print(f'Running "{method_name}" with {n_features} features on "{dataset_name}".')
 
             if dataset_name == 'dag':
                 X, X_tilde, y, k, k2 = load_dag_dataset(os.path.join(ROOT, 'data'))
@@ -239,15 +240,15 @@ def process_dataset_(method_name, dataset_name, k, ns, n_samples=1000):
 def process_dataset_with_fa_methods(dataset_name, k, ns, n_samples=1000, bootstrap=False, with_train=False):
     splits = list(KFold(n_splits=6).split(np.random.rand(n_samples)))
 
-    models = {(n_features, j): NNwrapper.create(dataset_name, n_features) for n_features in ns for j in range(6)}
+    models = {(n_features, j): NNwrapper.create(dataset_name, n_features, 2) for n_features in ns for j in range(6)}
     for j in range(6):
         for n_features in ns:
             wrappers = []
             if bootstrap:
                 for _ in range(10):
-                    wrappers.append(NNwrapper.create(dataset_name, n_features))
+                    wrappers.append(NNwrapper.create(dataset_name, n_features, 2))
             else:
-                wrappers.append(NNwrapper.create(dataset_name, n_features))
+                wrappers.append(NNwrapper.create(dataset_name, n_features, 2))
             models[(n_features, j)] = wrappers
 
     for method_name in SA_METHOD_NAMES:
@@ -334,14 +335,23 @@ def process_dataset(method_name, dataset_name, k, ns, n_samples=1000):
 if __name__ == '__main__':
 
     method_names = [
-        'attr', 'attr-t', 'attr-b',
-        'nn', 'rf', 'relief', 'fsnet', 'mrmr', 'mi', 'lassonet', 'cae',
-        'treeshap', 'canceloutsigmoid', 'canceloutsoftmax', 'deeppink']
+        'attr', # TODO
+        'attr-t', # TODO
+        'attr-b', # TODO
+        'nn',
+        'rf', 'relief',
+        'fsnet',
+        'mrmr', 'mi', 'lassonet', 'cae',
+        'treeshap',
+        'canceloutsigmoid',
+        'canceloutsoftmax',
+        'deeppink'
+    ]
     parser = argparse.ArgumentParser()
     parser.add_argument('method', type=str, choices=method_names, help='Method name')
     args = parser.parse_args()
 
-    for n_samples in [1000]:
+    for n_samples in [500]:
         ns = [8, 16, 32, 64, 128, 256, 512, 1024, 2048]
         process_dataset(args.method, 'ring+xor+sum', 6, [6] + ns, n_samples=n_samples)
         process_dataset(args.method, 'ring+xor', 4, [4] + ns, n_samples=n_samples)
