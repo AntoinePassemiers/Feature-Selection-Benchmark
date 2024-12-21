@@ -57,6 +57,7 @@ METHODS = {
     'RF': ('Random Forest', 'darkgreen', 'D'),
     'TreeSHAP': ('TreeSHAP', 'limegreen', 'D'),
     'Relief': ('Relief', 'turquoise', 'o'),
+    'mi': ('Mutual information', 'cadetblue', '^'),
     'mRMR': ('mRMR', 'steelblue', 's'),
     'LassoNet': ('LassoNet', 'chocolate', '*')
 }
@@ -313,7 +314,7 @@ def create_table(results):
                         'Deconvolution', 'FeatureAblation', 'FeaturePermutation', 'ShapleyValueSampling']:
         s += f(method_name)
     s += '\\midrule\n'
-    for method_name in ['mRMR', 'LassoNet', 'Relief', 'CAE', 'FSNet', 'CancelOut_Softmax', 'CancelOut_Sigmoid',
+    for method_name in ['mi', 'mRMR', 'LassoNet', 'Relief', 'CAE', 'FSNet', 'CancelOut_Softmax', 'CancelOut_Sigmoid',
                         'DeepPINK', 'RF', 'TreeSHAP']:
         s += f(method_name)
 
@@ -355,7 +356,7 @@ def create_dag_table(results):
                         'Deconvolution', 'FeatureAblation', 'FeaturePermutation', 'ShapleyValueSampling']:
         s += f(method_name)
     s += '\\midrule\n'
-    for method_name in ['mRMR', 'LassoNet', 'Relief', 'CAE', 'FSNet', 'CancelOut_Softmax', 'CancelOut_Sigmoid',
+    for method_name in ['mi', 'mRMR', 'LassoNet', 'Relief', 'CAE', 'FSNet', 'CancelOut_Softmax', 'CancelOut_Sigmoid',
                         'DeepPINK', 'RF', 'TreeSHAP']:
         s += f(method_name)
 
@@ -411,7 +412,7 @@ plt.clf()
 
 
 extra_method_names = [
-    'nn', 'treeshap', 'canceloutsigmoid', 'canceloutsoftmax', 'deeppink', 'fsnet', 'mrmr', 'relief', 'rf', 'lassonet', 'cae',
+    'nn', 'treeshap', 'canceloutsigmoid', 'canceloutsoftmax', 'deeppink', 'fsnet', 'mi', 'mrmr', 'relief', 'rf', 'lassonet', 'cae',
     'InputXGradient', 'IG_noMul', 'GuidedBackprop', 'FeaturePermutation', 'FeatureAblation', 'Deconvolution', 'DeepLift',
     'SmoothGrad', 'ShapleyValueSampling', 'Saliency'
 ]

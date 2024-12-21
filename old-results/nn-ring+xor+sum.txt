@@ -1,2 +1,0 @@
-Dataset	NN_AUC	NN_AUPRC
-ring-xor-sum_1000samples-6feat.csv	0.8146740132165037	0.8555811388303174

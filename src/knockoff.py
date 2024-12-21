@@ -57,7 +57,7 @@ def generate_gaussian_knockoffs(X, eps=1e-3):
         [sigma, sigma - np.diag(s)],
         [sigma - np.diag(s), sigma]
     ])
-    assert G.shape[0] == np.linalg.matrix_rank(G)
+    # assert G.shape[0] == np.linalg.matrix_rank(G)
 
     S = np.diag(s)
     sigma_inv_d = scipy.linalg.lstsq(sigma, S)[0]

@@ -1,9 +1,0 @@
-Dataset	mRMR_bestK	mRMR_best2K
-ring+xor_1000samples-4feat.csv	1.0	1.0
-ring+xor_1000samples-8feat.csv	1.0	1.0
-ring+xor_1000samples-16feat.csv	0.9583333333333334	1.0
-ring+xor_1000samples-32feat.csv	0.75	1.0
-ring+xor_1000samples-64feat.csv	0.75	0.9583333333333334
-ring+xor_1000samples-128feat.csv	0.7083333333333334	0.7916666666666666
-ring+xor_1000samples-256feat.csv	0.625	0.75
-ring+xor_1000samples-512feat.csv	0.5833333333333334	0.625

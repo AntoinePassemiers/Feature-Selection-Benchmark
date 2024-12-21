@@ -264,7 +264,7 @@ class FSNet(torch.nn.Module):
                 if self.n_classes > 2:
                     loss1 = criterion(y_hat, _y)
                 else:
-                    loss1 = criterion(torch.squeeze(y_hat), torch.squeeze(_y))
+                    loss1 = criterion(torch.squeeze(y_hat), torch.squeeze(_y.float()))
                 loss2 = _lambda * torch.mean((_X - X_reconstructed) ** 2)
                 loss = loss1 + loss2
 

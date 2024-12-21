@@ -2,10 +2,11 @@ import numpy as np
 import scipy.spatial
 
 
-def relief(X, y, n_iter=None):
+def relief(X, y, n_iter=None, eps=1e-15):
     D = scipy.spatial.distance_matrix(X, X)
     scores = np.zeros(X.shape[1])
     ranges = np.max(X, axis=0) - np.min(X, axis=0)
+    ranges = np.clip(ranges, eps, None)
     if n_iter is None:
         n_iter = X.shape[0]
     mm = np.random.choice(X.shape[0], n_iter, replace=False)

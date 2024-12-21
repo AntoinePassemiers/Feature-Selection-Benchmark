@@ -3,8 +3,12 @@ scipy
 pandas
 torch
 captum
-sklearn
-tensorflow==2.1.0
+shap
+scikit-learn
+xlrd
+optuna
+tensorflow
 keras==2.3.0
 concrete_autoencoder==0.0.1
+lassonet
 python-mnist

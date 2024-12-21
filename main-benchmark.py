@@ -22,14 +22,13 @@
 import argparse
 import os
 
-import captum.attr
 import numpy as np
 import torch
 from sklearn.metrics import roc_auc_score, average_precision_score
 from sklearn.model_selection import KFold
 from sklearn.preprocessing import StandardScaler
 
-from src.core import run_fs_method
+from src.core import run_fs_method, run_fa_method
 from src.dag import load_dag_dataset
 from src.data import generate_dataset
 from src.nn_wrapper import NNwrapper
@@ -51,7 +50,7 @@ FS_METHODS = {
     'relief': ('Relief', True, False),
     'fsnet': ('FSNet', True, True),
     'mrmr': ('mRMR', True, False),
-    'mi': ('MI', True, False),
+    'mi': ('mi', True, False),
     'lassonet': ('LassoNet', True, True),
     'cae': ('CAE', True, True)
 }
@@ -68,48 +67,6 @@ SA_METHODS = {
     'ShapleyValueSampling': 'Shapley value sampling'
 }
 SA_METHOD_NAMES = list(SA_METHODS.keys())
-
-
-def run_fa_methods(wrapper, X_test, method_name):
-    tmp_x = torch.FloatTensor(X_test)
-    tmp_x.requires_grad_()
-    baselines = torch.zeros((1, tmp_x.size()[-1]))
-    if 'IG_noMul' == method_name:
-        ig = captum.attr.IntegratedGradients(wrapper.model, multiply_by_inputs=False)
-        attr = ig.attribute(tmp_x, target=0, return_convergence_delta=False, baselines=baselines)
-    elif 'Saliency' == method_name:
-        ig = captum.attr.Saliency(wrapper.model)
-        attr = ig.attribute(tmp_x, target=0, abs=True)
-    elif 'DeepLift' == method_name:
-        ig = captum.attr.DeepLift(wrapper.model, multiply_by_inputs=False)
-        attr = ig.attribute(tmp_x, target=0, return_convergence_delta=False, baselines=baselines)
-    elif 'InputXGradient' == method_name:
-        ig = captum.attr.InputXGradient(wrapper.model)
-        attr = ig.attribute(tmp_x, target=0)
-    elif 'SmoothGrad' == method_name:
-        ig = captum.attr.NoiseTunnel(captum.attr.Saliency(wrapper.model))
-        attr = ig.attribute(tmp_x, target=0, nt_samples=50, stdevs=0.1)
-    elif 'GuidedBackprop' == method_name:
-        ig = captum.attr.GuidedBackprop(wrapper.model)
-        attr = ig.attribute(tmp_x, target=0)
-    elif 'Deconvolution' == method_name:
-        ig = captum.attr.Deconvolution(wrapper.model)
-        attr = ig.attribute(tmp_x, target=0)
-    elif 'FeatureAblation' == method_name:
-        ig = captum.attr.FeatureAblation(wrapper.model)
-        attr = ig.attribute(tmp_x, target=0, baselines=baselines)
-    elif 'FeaturePermutation' == method_name:
-        ig = captum.attr.FeaturePermutation(wrapper.model)
-        attr = ig.attribute(tmp_x, target=0)
-    elif 'ShapleyValueSampling' == method_name:
-        ig = captum.attr.ShapleyValueSampling(wrapper.model)
-        attr = ig.attribute(tmp_x, target=0, baselines=baselines)
-    else:
-        raise NotImplementedError(method_name)
-
-    attr = attr.detach().numpy()
-    attr = np.mean(np.abs(attr), axis=0)
-    return attr
 
 
 def run_method(splits, X, X_tilde, y, method_name, dataset_name, k, k2=None, h_scores=None):
@@ -294,9 +251,9 @@ def process_dataset_with_fa_methods(dataset_name, k, ns, n_samples=1000, bootstr
                             else:
                                 wrapper.fit(X_train, y_train)
                         if with_train:
-                            hr_scores.append(run_fa_methods(wrapper, X_train, method_name))
+                            hr_scores.append(run_fa_method(wrapper, X_train, method_name))
                         else:
-                            hr_scores.append(run_fa_methods(wrapper, X_test, method_name))
+                            hr_scores.append(run_fa_method(wrapper, X_test, method_name))
                     hr_scores = np.asarray(hr_scores)
                     h_scores.append(np.mean(hr_scores, axis=0))
 
@@ -335,13 +292,17 @@ def process_dataset(method_name, dataset_name, k, ns, n_samples=1000):
 if __name__ == '__main__':
 
     method_names = [
-        'attr', # TODO
-        'attr-t', # TODO
-        'attr-b', # TODO
+        'attr',
+        'attr-t',
+        'attr-b',
         'nn',
-        'rf', 'relief',
+        'rf',
+        'relief',
         'fsnet',
-        'mrmr', 'mi', 'lassonet', 'cae',
+        'mrmr',
+        'mi',
+        'lassonet',
+        'cae',
         'treeshap',
         'canceloutsigmoid',
         'canceloutsoftmax',
@@ -351,10 +312,10 @@ if __name__ == '__main__':
     parser.add_argument('method', type=str, choices=method_names, help='Method name')
     args = parser.parse_args()
 
-    for n_samples in [500]:
+    for n_samples in [1000]:
         ns = [8, 16, 32, 64, 128, 256, 512, 1024, 2048]
         process_dataset(args.method, 'ring+xor+sum', 6, [6] + ns, n_samples=n_samples)
-        process_dataset(args.method, 'ring+xor', 4, [4] + ns, n_samples=n_samples)
-        process_dataset(args.method, 'ring', 2, [2, 4] + ns, n_samples=n_samples)
-        process_dataset(args.method, 'xor', 2, [2, 4] + ns, n_samples=n_samples)
-        process_dataset(args.method, 'dag', 6, [2000], n_samples=n_samples)
+        #process_dataset(args.method, 'ring+xor', 4, [4] + ns, n_samples=n_samples)
+        #process_dataset(args.method, 'ring', 2, ns, n_samples=n_samples)
+        #process_dataset(args.method, 'xor', 2, [2, 4] + ns, n_samples=n_samples)
+        #process_dataset(args.method, 'dag', 6, [2000], n_samples=n_samples)

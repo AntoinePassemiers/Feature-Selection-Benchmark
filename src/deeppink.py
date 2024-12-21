@@ -57,6 +57,11 @@ class DeepPINK(torch.nn.Module):
                 W.append(layer.weight.data.numpy().T)
                 W_acc = W[-1] if (W_acc is None) else np.dot(W_acc, W[-1])
         w = np.squeeze(W0 * W_acc)
-        z = self.lc1.weight.data.numpy()[:, 0] * w
-        z_tilde = self.lc1.weight.data.numpy()[:, 1] * w
-        return z ** 2. - z_tilde ** 2.
+        if len(w.shape) == 1:
+            z = self.lc1.weight.data.numpy()[:, 0] * w
+            z_tilde = self.lc1.weight.data.numpy()[:, 1] * w
+            return z ** 2. - z_tilde ** 2.
+        else:
+            z = self.lc1.weight.data.numpy()[:, 0, np.newaxis] * w
+            z_tilde = self.lc1.weight.data.numpy()[:, 1, np.newaxis] * w
+            return np.mean(z ** 2. - z_tilde ** 2., axis=1)
