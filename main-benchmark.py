@@ -315,7 +315,7 @@ if __name__ == '__main__':
     for n_samples in [1000]:
         ns = [8, 16, 32, 64, 128, 256, 512, 1024, 2048]
         process_dataset(args.method, 'ring+xor+sum', 6, [6] + ns, n_samples=n_samples)
-        #process_dataset(args.method, 'ring+xor', 4, [4] + ns, n_samples=n_samples)
-        #process_dataset(args.method, 'ring', 2, ns, n_samples=n_samples)
-        #process_dataset(args.method, 'xor', 2, [2, 4] + ns, n_samples=n_samples)
-        #process_dataset(args.method, 'dag', 6, [2000], n_samples=n_samples)
+        process_dataset(args.method, 'ring+xor', 4, [4] + ns, n_samples=n_samples)
+        process_dataset(args.method, 'ring', 2, ns, n_samples=n_samples)
+        process_dataset(args.method, 'xor', 2, [2, 4] + ns, n_samples=n_samples)
+        process_dataset(args.method, 'dag', 6, [2000], n_samples=n_samples)
